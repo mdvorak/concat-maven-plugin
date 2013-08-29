@@ -123,4 +123,20 @@ public class ConcatMojo extends AbstractMojo {
 
         return Collections.unmodifiableCollection(sources);
     }
+
+    public void setSourceDirectory(File sourceDirectory) {
+        this.sourceDirectory = sourceDirectory;
+    }
+
+    public void setOutputFile(File outputFile) {
+        this.outputFile = outputFile;
+    }
+
+    public void setConcatFiles(List<String> concatFiles) {
+        this.concatFiles = concatFiles;
+    }
+
+    public void setAppendNewline(boolean appendNewline) {
+        this.appendNewline = appendNewline;
+    }
 }
