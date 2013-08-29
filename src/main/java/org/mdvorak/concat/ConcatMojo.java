@@ -19,14 +19,12 @@ package org.mdvorak.concat;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Goal which concatenates several files and creates a new file as specified.
@@ -36,37 +34,34 @@ import java.util.List;
  * @Mojo( defaultPhase = "process-sources" )
  * @phase process-sources
  */
+@SuppressWarnings("FieldCanBeLocal")
 public class ConcatMojo extends AbstractMojo {
 
     /**
-     * @parameter
+     * Base directory for the files.
      */
+    @Parameter(property = "${project.basedir}")
     private File sourceDirectory;
 
     /**
      * The resulting file
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private File outputFile;
 
 
     /**
      * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
      * order of matched files is unspecified.
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private List<String> concatFiles;
 
 
     /**
      * Append newline after each concatenation
-     *
-     * @parameter
      */
+    @Parameter
     private boolean appendNewline = false;
 
 
@@ -78,8 +73,8 @@ public class ConcatMojo extends AbstractMojo {
             getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
             try {
 
-                for (String file : concatFiles) {
-                    final File inputFile = new File(sourceDirectory, file);
+                for (String file : collectFiles()) {
+                    File inputFile = new File(sourceDirectory, file);
 
                     getLog().debug("Concatenating file: " + inputFile.getAbsolutePath());
                     String input = FileUtils.readFileToString(inputFile);
@@ -106,24 +101,22 @@ public class ConcatMojo extends AbstractMojo {
             throw new MojoExecutionException("Please specify the file(s) to concatenate");
         }
 
-        if (sourceDirectory != null && !sourceDirectory.isDirectory()) {
-            throw new MojoExecutionException("sourceDirectory does not exist");
+        if (sourceDirectory == null || !sourceDirectory.isDirectory()) {
+            throw new MojoExecutionException("sourceDirectory " + String.valueOf(sourceDirectory) + " does not exist");
         }
 
         return true;
     }
 
 
-    protected List<String> collectFiles() {
+    protected Collection<String> collectFiles() {
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.addDefaultExcludes();
 
-        if (sourceDirectory != null) {
-            scanner.setBasedir(sourceDirectory);
-        }
+        scanner.setBasedir(sourceDirectory);
 
         // Preserve order
-        List<String> sources = new ArrayList<String>();
+        Collection<String> sources = new LinkedHashSet<String>();
 
         for (String include : concatFiles) {
             scanner.setIncludes(new String[]{include});
@@ -131,6 +124,6 @@ public class ConcatMojo extends AbstractMojo {
             sources.addAll(Arrays.asList(scanner.getIncludedFiles()));
         }
 
-        return Collections.unmodifiableList(sources);
+        return Collections.unmodifiableCollection(sources);
     }
 }
