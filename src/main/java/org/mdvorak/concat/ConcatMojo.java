@@ -19,9 +19,13 @@ package org.mdvorak.concat;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.DirectoryScanner;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,6 +38,10 @@ import java.util.List;
  */
 public class ConcatMojo extends AbstractMojo {
 
+    /**
+     * @parameter
+     */
+    private File sourceDirectory;
 
     /**
      * The resulting file
@@ -45,12 +53,13 @@ public class ConcatMojo extends AbstractMojo {
 
 
     /**
-     * Files to concatenate
+     * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
+     * order of matched files is unspecified.
      *
      * @parameter
      * @required
      */
-    private List<File> concatFiles;
+    private List<String> concatFiles;
 
 
     /**
@@ -68,10 +77,15 @@ public class ConcatMojo extends AbstractMojo {
         if (validate()) {
             getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
             try {
-                for (File inputFile : concatFiles) {
+
+                for (String file : concatFiles) {
+                    final File inputFile = new File(sourceDirectory, file);
+
                     getLog().debug("Concatenating file: " + inputFile.getAbsolutePath());
                     String input = FileUtils.readFileToString(inputFile);
+
                     FileUtils.writeStringToFile(outputFile, input, true);
+
                     if (appendNewline) {
                         FileUtils.writeStringToFile(outputFile, System.getProperty("line.separator"), true);
                     }
@@ -85,20 +99,38 @@ public class ConcatMojo extends AbstractMojo {
 
     private boolean validate() throws MojoExecutionException {
         if (outputFile == null) {
-            throw new MojoExecutionException("Please specify a correct outPutFile");
+            throw new MojoExecutionException("Please specify a correct outputFile");
         }
 
         if (concatFiles == null || concatFiles.size() == 0) {
             throw new MojoExecutionException("Please specify the file(s) to concatenate");
-        } else {
-            for (File file : concatFiles) {
-                if (!file.exists()) {
-                    throw new MojoExecutionException(file.getAbsolutePath() + " does not exists.");
-                }
-            }
+        }
 
+        if (sourceDirectory != null && !sourceDirectory.isDirectory()) {
+            throw new MojoExecutionException("sourceDirectory does not exist");
         }
 
         return true;
+    }
+
+
+    protected List<String> collectFiles() {
+        DirectoryScanner scanner = new DirectoryScanner();
+        scanner.addDefaultExcludes();
+
+        if (sourceDirectory != null) {
+            scanner.setBasedir(sourceDirectory);
+        }
+
+        // Preserve order
+        List<String> sources = new ArrayList<String>();
+
+        for (String include : concatFiles) {
+            scanner.setIncludes(new String[]{include});
+            scanner.scan();
+            sources.addAll(Arrays.asList(scanner.getIncludedFiles()));
+        }
+
+        return Collections.unmodifiableList(sources);
     }
 }
