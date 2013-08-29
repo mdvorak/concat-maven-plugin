@@ -1,4 +1,4 @@
-package org.mdvorak.concat;
+package org.mdvorak;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -19,6 +19,8 @@ package org.mdvorak.concat;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
@@ -28,19 +30,14 @@ import java.util.*;
 
 /**
  * Goal which concatenates several files and creates a new file as specified.
- *
- * @Mojo( name = "concat" )
- * @goal concat
- * @Mojo( defaultPhase = "process-sources" )
- * @phase process-sources
  */
-@SuppressWarnings("FieldCanBeLocal")
+@Mojo(name = "concat", defaultPhase = LifecyclePhase.PROCESS_SOURCES, threadSafe = true)
 public class ConcatMojo extends AbstractMojo {
 
     /**
      * Base directory for the files.
      */
-    @Parameter(property = "${project.basedir}")
+    @Parameter(property = "project.basedir")
     private File sourceDirectory;
 
     /**

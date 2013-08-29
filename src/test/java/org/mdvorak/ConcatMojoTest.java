@@ -1,4 +1,4 @@
-package org.mdvorak.concat;
+package org.mdvorak;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;

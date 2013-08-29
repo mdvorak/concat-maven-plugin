@@ -20,10 +20,11 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.mdvorak</groupId>
                 <artifactId>concat-maven-plugin</artifactId>
-                <sourceDirectory>${project.basedir}</sourceDirectory>
                 <configuration>
                     <outputFile>target/concatfile.output</outputFile>
+                    <sourceDirectory>${project.basedir}</sourceDirectory>
                 </configuration>
             </plugin>
         </plugins>
