@@ -73,7 +73,7 @@ public class ConcatMojo extends AbstractMojo {
                 for (String file : collectFiles()) {
                     File inputFile = new File(sourceDirectory, file);
 
-                    getLog().debug("Concatenating file: " + inputFile.getAbsolutePath());
+                    getLog().debug("Appending file: " + inputFile.getAbsolutePath());
                     String input = FileUtils.readFileToString(inputFile);
 
                     FileUtils.writeStringToFile(outputFile, input, true);
@@ -106,7 +106,7 @@ public class ConcatMojo extends AbstractMojo {
     }
 
 
-    protected Collection<String> collectFiles() {
+    protected Collection<String> collectFiles() throws MojoExecutionException {
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.addDefaultExcludes();
 
@@ -118,6 +118,11 @@ public class ConcatMojo extends AbstractMojo {
         for (String include : concatFiles) {
             scanner.setIncludes(new String[]{include});
             scanner.scan();
+
+            if (scanner.getIncludedFiles().length < 1) {
+                throw new MojoExecutionException("Pattern " + include + " did not match any files in directory " + sourceDirectory);
+            }
+
             sources.addAll(Arrays.asList(scanner.getIncludedFiles()));
         }
 
