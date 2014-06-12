@@ -54,6 +54,8 @@ public class ConcatMojo extends AbstractMojo {
     @Parameter(required = true)
     private List<String> concatFiles;
 
+    @Parameter(property = "project.build.sourceEncoding")
+    private String sourceEncoding;
 
     /**
      * Append newline after each concatenation
@@ -74,14 +76,13 @@ public class ConcatMojo extends AbstractMojo {
                     File inputFile = new File(sourceDirectory, file);
 
                     getLog().debug("Appending file: " + inputFile.getAbsolutePath());
-                    String input = FileUtils.readFileToString(inputFile);
-
-                    FileUtils.writeStringToFile(outputFile, input, true);
+                    String input = FileUtils.readFileToString(inputFile, sourceEncoding);
 
                     if (appendNewline) {
-                        FileUtils.writeStringToFile(outputFile, System.getProperty("line.separator"), true);
+                        input += System.getProperty("line.separator");
                     }
 
+                    FileUtils.writeStringToFile(outputFile, input, sourceEncoding, true);
                 }
             } catch (IOException e) {
                 throw new MojoExecutionException("Failed to concatenate", e);
@@ -143,5 +144,9 @@ public class ConcatMojo extends AbstractMojo {
 
     public void setAppendNewline(boolean appendNewline) {
         this.appendNewline = appendNewline;
+    }
+
+    public void setSourceEncoding(String sourceEncoding) {
+        this.sourceEncoding = sourceEncoding;
     }
 }
