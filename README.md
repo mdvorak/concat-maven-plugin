@@ -3,4 +3,4 @@ concat-maven-plugin
 
 Maven plugin that can concat files. Supports file masks.
 
-Thanks for **Thomas de Bruin** his [original plugin](https://github.com/bomas/concat-maven-plugin).
+Thanks **Thomas de Bruin** for his [original plugin](https://github.com/bomas/concat-maven-plugin).
