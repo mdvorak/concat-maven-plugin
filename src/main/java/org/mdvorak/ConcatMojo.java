@@ -124,7 +124,11 @@ public class ConcatMojo extends AbstractMojo {
                 throw new MojoExecutionException("Pattern " + include + " did not match any files in directory " + sourceDirectory);
             }
 
-            sources.addAll(Arrays.asList(scanner.getIncludedFiles()));
+            // Sort within the include mask
+            final List<String> includedFiles = new ArrayList<String>(Arrays.asList(scanner.getIncludedFiles()));
+            Collections.sort(includedFiles);
+
+            sources.addAll(includedFiles);
         }
 
         return Collections.unmodifiableCollection(sources);
