@@ -143,7 +143,7 @@ public class ConcatMojo extends AbstractMojo {
         scanner.setBasedir(sourceDirectory);
 
         // Prepare structures
-        final String[] excludes = this.excludes.toArray(new String[this.excludes.size()]);
+        final String[] excludes = this.excludes != null ? this.excludes.toArray(new String[this.excludes.size()]) : null;
 
         // Preserve order
         final Collection<String> sources = new LinkedHashSet<String>();
