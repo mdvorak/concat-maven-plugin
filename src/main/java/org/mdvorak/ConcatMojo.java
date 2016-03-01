@@ -31,6 +31,7 @@ import java.util.*;
  * Goal which concatenates several files and creates a new file as specified.
  */
 @Mojo(name = "concat", defaultPhase = LifecyclePhase.PROCESS_SOURCES, threadSafe = true)
+@SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal"})
 public class ConcatMojo extends AbstractMojo {
 
     /**
@@ -47,10 +48,26 @@ public class ConcatMojo extends AbstractMojo {
 
     /**
      * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
-     * order of matched files is unspecified.
+     * matched files are sorted alphabetically.
+     *
+     * @deprecated Use {@link #includes} instead.
      */
-    @Parameter(required = true)
+    @Parameter
+    @Deprecated
     private List<String> concatFiles;
+
+    /**
+     * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
+     * matched files are sorted alphabetically.
+     */
+    @Parameter
+    private List<String> includes;
+
+    /**
+     * Files to be excluded from concatenation.
+     */
+    @Parameter
+    private List<String> excludes;
 
     @Parameter(property = "project.build.sourceEncoding")
     private String sourceEncoding;
@@ -61,10 +78,6 @@ public class ConcatMojo extends AbstractMojo {
     @Parameter
     private boolean appendNewline = false;
 
-
-    /* (non-Javadoc)
-     * @see org.apache.maven.plugin.AbstractMojo#execute()
-     */
     public void execute() throws MojoExecutionException {
         if (validate()) {
             getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
@@ -75,22 +88,28 @@ public class ConcatMojo extends AbstractMojo {
             try {
                 outputWriter = new OutputStreamWriter(new FileOutputStream(outputFile), sourceEncoding);
 
-                for (String file : collectFiles()) {
-                    File inputFile = new File(sourceDirectory, file);
+                final Collection<String> sources = collectFiles();
 
-                    getLog().debug("Appending file: " + inputFile.getAbsolutePath());
+                if (sources.size() > 0) {
+                    for (String file : sources) {
+                        File inputFile = new File(sourceDirectory, file);
 
-                    Reader inputReader = null;
-                    try {
-                        inputReader = new InputStreamReader(new FileInputStream(inputFile), sourceEncoding);
-                        IOUtils.copyLarge(inputReader, outputWriter, buffer);
-                    } finally {
-                        IOUtils.closeQuietly(inputReader);
+                        getLog().debug("Appending file: " + inputFile.getAbsolutePath());
+
+                        Reader inputReader = null;
+                        try {
+                            inputReader = new InputStreamReader(new FileInputStream(inputFile), sourceEncoding);
+                            IOUtils.copyLarge(inputReader, outputWriter, buffer);
+                        } finally {
+                            IOUtils.closeQuietly(inputReader);
+                        }
+
+                        if (appendNewline) {
+                            outputWriter.write(System.getProperty("line.separator"));
+                        }
                     }
-
-                    if (appendNewline) {
-                        outputWriter.write(System.getProperty("line.separator"));
-                    }
+                } else {
+                    getLog().info("No files matched");
                 }
 
                 // Don't consume exception
@@ -109,10 +128,6 @@ public class ConcatMojo extends AbstractMojo {
             throw new MojoExecutionException("Please specify a correct outputFile");
         }
 
-        if (concatFiles == null || concatFiles.size() == 0) {
-            throw new MojoExecutionException("Please specify the file(s) to concatenate");
-        }
-
         if (sourceDirectory == null || !sourceDirectory.isDirectory()) {
             throw new MojoExecutionException("sourceDirectory " + String.valueOf(sourceDirectory) + " does not exist");
         }
@@ -122,16 +137,31 @@ public class ConcatMojo extends AbstractMojo {
 
 
     protected Collection<String> collectFiles() throws MojoExecutionException {
-        DirectoryScanner scanner = new DirectoryScanner();
+        final DirectoryScanner scanner = new DirectoryScanner();
         scanner.addDefaultExcludes();
 
         scanner.setBasedir(sourceDirectory);
 
-        // Preserve order
-        Collection<String> sources = new LinkedHashSet<String>();
+        // Prepare structures
+        final String[] excludes = this.excludes.toArray(new String[this.excludes.size()]);
 
-        for (String include : concatFiles) {
+        // Preserve order
+        final Collection<String> sources = new LinkedHashSet<String>();
+
+        if (concatFiles != null) {
+            collectFiles(scanner, concatFiles, excludes, sources);
+        }
+        if (includes != null) {
+            collectFiles(scanner, includes, excludes, sources);
+        }
+
+        return Collections.unmodifiableCollection(sources);
+    }
+
+    private void collectFiles(DirectoryScanner scanner, Collection<String> includes, String[] excludes, Collection<String> sources) throws MojoExecutionException {
+        for (String include : includes) {
             scanner.setIncludes(new String[]{include});
+            scanner.setExcludes(excludes);
             scanner.scan();
 
             if (scanner.getIncludedFiles().length < 1) {
@@ -144,27 +174,5 @@ public class ConcatMojo extends AbstractMojo {
 
             sources.addAll(includedFiles);
         }
-
-        return Collections.unmodifiableCollection(sources);
-    }
-
-    public void setSourceDirectory(File sourceDirectory) {
-        this.sourceDirectory = sourceDirectory;
-    }
-
-    public void setOutputFile(File outputFile) {
-        this.outputFile = outputFile;
-    }
-
-    public void setConcatFiles(List<String> concatFiles) {
-        this.concatFiles = concatFiles;
-    }
-
-    public void setAppendNewline(boolean appendNewline) {
-        this.appendNewline = appendNewline;
-    }
-
-    public void setSourceEncoding(String sourceEncoding) {
-        this.sourceEncoding = sourceEncoding;
     }
 }
