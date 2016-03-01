@@ -10,8 +10,10 @@
     <name>concat-maven-plugin Maven Mojo</name>
 
     <url>https://github.com/mdvorak/concat-maven-plugin</url>
+
     <scm>
         <url>https://github.com/mdvorak/concat-maven-plugin.git</url>
+        <developerConnection>scm:git:https://github.com/mdvorak/concat-maven-plugin.git</developerConnection>
     </scm>
 
     <developers>
