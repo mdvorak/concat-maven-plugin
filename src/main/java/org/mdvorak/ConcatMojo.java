@@ -16,7 +16,7 @@ package org.mdvorak;
  * limitations under the License.
  */
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -24,8 +24,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -45,7 +44,6 @@ public class ConcatMojo extends AbstractMojo {
      */
     @Parameter(required = true)
     private File outputFile;
-
 
     /**
      * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
@@ -70,22 +68,38 @@ public class ConcatMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         if (validate()) {
             getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
+
+            final char[] buffer = new char[4096];
+            Writer outputWriter = null;
+
             try {
+                outputWriter = new OutputStreamWriter(new FileOutputStream(outputFile), sourceEncoding);
 
                 for (String file : collectFiles()) {
                     File inputFile = new File(sourceDirectory, file);
 
                     getLog().debug("Appending file: " + inputFile.getAbsolutePath());
-                    String input = FileUtils.readFileToString(inputFile, sourceEncoding);
 
-                    if (appendNewline) {
-                        input += System.getProperty("line.separator");
+                    Reader inputReader = null;
+                    try {
+                        inputReader = new InputStreamReader(new FileInputStream(inputFile), sourceEncoding);
+                        IOUtils.copyLarge(inputReader, outputWriter, buffer);
+                    } finally {
+                        IOUtils.closeQuietly(inputReader);
                     }
 
-                    FileUtils.writeStringToFile(outputFile, input, sourceEncoding, true);
+                    if (appendNewline) {
+                        outputWriter.write(System.getProperty("line.separator"));
+                    }
                 }
+
+                // Don't consume exception
+                outputWriter.close();
+                outputWriter = null;
             } catch (IOException e) {
                 throw new MojoExecutionException("Failed to concatenate", e);
+            } finally {
+                IOUtils.closeQuietly(outputWriter);
             }
         }
     }
