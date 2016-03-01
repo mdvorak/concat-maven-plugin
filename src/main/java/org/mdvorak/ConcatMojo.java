@@ -98,6 +98,12 @@ public class ConcatMojo extends AbstractMojo {
 
                         Reader inputReader = null;
                         try {
+                            // Prevent ugly loop
+                            if (inputFile.getAbsoluteFile().equals(outputFile.getAbsoluteFile())) {
+                                throw new MojoExecutionException("Output file is included in input files, that might lead to infinite loop.");
+                            }
+
+                            // Append file
                             inputReader = new InputStreamReader(new FileInputStream(inputFile), sourceEncoding);
                             IOUtils.copyLarge(inputReader, outputWriter, buffer);
                         } finally {
