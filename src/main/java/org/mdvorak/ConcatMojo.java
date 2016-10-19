@@ -49,16 +49,6 @@ public class ConcatMojo extends AbstractMojo {
     /**
      * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
      * matched files are sorted alphabetically.
-     *
-     * @deprecated Use {@link #includes} instead.
-     */
-    @Parameter
-    @Deprecated
-    private List<String> concatFiles;
-
-    /**
-     * Files to concatenate. It supports ant-like file masks. When there is a mask specified,
-     * matched files are sorted alphabetically.
      */
     @Parameter
     private List<String> includes;
@@ -78,6 +68,12 @@ public class ConcatMojo extends AbstractMojo {
     @Parameter
     private boolean appendNewline = false;
 
+    /**
+     * Output file is not truncated, content is appended instead.
+     */
+    @Parameter
+    private boolean appendToOutput = false;
+
     public void execute() throws MojoExecutionException {
         if (validate()) {
             getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
@@ -86,7 +82,7 @@ public class ConcatMojo extends AbstractMojo {
             Writer outputWriter = null;
 
             try {
-                outputWriter = new OutputStreamWriter(new FileOutputStream(outputFile), sourceEncoding);
+                outputWriter = new OutputStreamWriter(new FileOutputStream(outputFile, appendToOutput), sourceEncoding);
 
                 final Collection<String> sources = collectFiles();
 
@@ -154,9 +150,6 @@ public class ConcatMojo extends AbstractMojo {
         // Preserve order
         final Collection<String> sources = new LinkedHashSet<String>();
 
-        if (concatFiles != null) {
-            collectFiles(scanner, concatFiles, excludes, sources);
-        }
         if (includes != null) {
             collectFiles(scanner, includes, excludes, sources);
         }
