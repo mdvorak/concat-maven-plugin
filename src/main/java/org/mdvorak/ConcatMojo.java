@@ -140,8 +140,6 @@ public class ConcatMojo extends AbstractMojo {
 
     protected Collection<String> collectFiles() throws MojoExecutionException {
         final DirectoryScanner scanner = new DirectoryScanner();
-        scanner.addDefaultExcludes();
-
         scanner.setBasedir(sourceDirectory);
 
         // Prepare structures
@@ -161,6 +159,7 @@ public class ConcatMojo extends AbstractMojo {
         for (String include : includes) {
             scanner.setIncludes(new String[]{include});
             scanner.setExcludes(excludes);
+            scanner.addDefaultExcludes(); // Note: This must be called after setExcludes
             scanner.scan();
 
             if (scanner.getIncludedFiles().length < 1) {
