@@ -78,6 +78,14 @@ public class ConcatMojo extends AbstractMojo {
         if (validate()) {
             getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
 
+            // Create parent directory if missing
+            if (!outputFile.getParentFile().isDirectory()) {
+                getLog().debug("Creating parent directory: " + outputFile.getParentFile());
+                if (!outputFile.getParentFile().mkdirs()) {
+                    getLog().warn("Failed to create parent directory: " + outputFile.getParentFile());
+                }
+            }
+
             final char[] buffer = new char[4096];
             Writer outputWriter = null;
 
