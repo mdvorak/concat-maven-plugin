@@ -76,13 +76,17 @@ public class ConcatMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         if (validate()) {
-            getLog().debug("Going to concatenate files to destination file: " + outputFile.getAbsolutePath());
+            if (appendToOutput) {
+                getLog().info("Appending to file " + outputFile.getAbsolutePath());
+            } else {
+                getLog().info("Writing file " + outputFile.getAbsolutePath());
+            }
 
             // Create parent directory if missing
             if (!outputFile.getParentFile().isDirectory()) {
-                getLog().debug("Creating parent directory: " + outputFile.getParentFile());
+                getLog().debug("Creating parent directory " + outputFile.getParentFile());
                 if (!outputFile.getParentFile().mkdirs()) {
-                    getLog().warn("Failed to create parent directory: " + outputFile.getParentFile());
+                    getLog().warn("Failed to create parent directory " + outputFile.getParentFile());
                 }
             }
 
@@ -95,10 +99,12 @@ public class ConcatMojo extends AbstractMojo {
                 final Collection<String> sources = collectFiles();
 
                 if (!sources.isEmpty()) {
+                    getLog().info("Found " + sources.size() + " files matching the criteria in directory " + sourceEncoding);
+
                     for (String file : sources) {
                         File inputFile = new File(sourceDirectory, file);
 
-                        getLog().debug("Appending file: " + inputFile.getAbsolutePath());
+                        getLog().debug("Reading file " + inputFile.getAbsolutePath());
 
                         Reader inputReader = null;
                         try {
