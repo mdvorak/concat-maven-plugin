@@ -119,7 +119,7 @@ public class ConcatMojo extends AbstractMojo {
                         }
                     }
                 } else {
-                    getLog().warn("No files were matching filters were found in directory " + sourceDirectory + ", output file will be empty");
+                    getLog().warn("No files matching filters were found in directory " + sourceDirectory + ", output file will be empty");
                 }
 
                 // Don't consume exception
