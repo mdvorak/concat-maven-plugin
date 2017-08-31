@@ -99,7 +99,7 @@ public class ConcatMojo extends AbstractMojo {
                 final Collection<String> sources = collectFiles();
 
                 if (!sources.isEmpty()) {
-                    getLog().info("Found " + sources.size() + " files matching the criteria in directory " + sourceEncoding);
+                    getLog().info("Found " + sources.size() + " files matching the criteria in directory " + sourceDirectory);
 
                     for (String file : sources) {
                         File inputFile = new File(sourceDirectory, file);
