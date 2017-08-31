@@ -172,7 +172,7 @@ public class ConcatMojo extends AbstractMojo {
 
             if (scanner.getIncludedFiles().length < 1) {
                 getLog().info("Pattern " + include + " did not match any files in directory " + sourceDirectory);
-                return;
+                continue;
             }
 
             // Sort within the include mask
