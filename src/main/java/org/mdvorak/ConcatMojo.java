@@ -94,7 +94,7 @@ public class ConcatMojo extends AbstractMojo {
 
                 final Collection<String> sources = collectFiles();
 
-                if (sources.size() > 0) {
+                if (!sources.isEmpty()) {
                     for (String file : sources) {
                         File inputFile = new File(sourceDirectory, file);
 
@@ -119,7 +119,7 @@ public class ConcatMojo extends AbstractMojo {
                         }
                     }
                 } else {
-                    getLog().info("No files matched");
+                    getLog().warn("No files were matching filters were found in directory " + sourceDirectory + ", output file will be empty");
                 }
 
                 // Don't consume exception
@@ -171,7 +171,8 @@ public class ConcatMojo extends AbstractMojo {
             scanner.scan();
 
             if (scanner.getIncludedFiles().length < 1) {
-                throw new MojoExecutionException("Pattern " + include + " did not match any files in directory " + sourceDirectory);
+                getLog().info("Pattern " + include + " did not match any files in directory " + sourceDirectory);
+                return;
             }
 
             // Sort within the include mask
